@@ -1,0 +1,50 @@
+version: 2.1
+
+# Import the official CircleCI Docker orb to simplify builds and pushes (test)
+orbs:
+  docker: circleci/docker@2.8.2
+
+jobs:
+  build-and-push:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+
+      # Fixed: Corrected parameter names to 'docker-username' and 'docker-password'
+      - docker/check:
+          registry: ghcr.io
+          docker-username: GHCR_USERNAME
+          docker-password: GHCR_PASSWORD
+
+      - docker/build:
+          registry: ghcr.io
+          image: digitalreachinsight/php-fpm-nginx-docker
+          tag: "latest,nightly-${CIRCLE_BUILD_NUM}"
+          
+      - docker/push:
+          registry: ghcr.io
+          image: digitalreachinsight/php-fpm-nginx-docker
+          tag: "latest,nightly-${CIRCLE_BUILD_NUM}"
+
+workflows:
+  nightly-build:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - build-and-push
+
+  manual-push-build:
+    jobs:
+      - build-and-push:
+          filters:
+            branches:
+              only:
+                - main
