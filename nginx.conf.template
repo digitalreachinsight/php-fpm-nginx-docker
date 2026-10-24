@@ -13,7 +13,7 @@ server {
     location ~ \.php$ {
         include fastcgi_params;
         fastcgi_intercept_errors on;
-        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.5-fpm.sock;
         
         # The environment variable will also be injected here
         fastcgi_param SCRIPT_FILENAME ${WEB_ROOT}$fastcgi_script_name;
