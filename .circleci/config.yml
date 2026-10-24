@@ -38,12 +38,12 @@ jobs:
       - docker/build:
           registry: ghcr.io
           image: digitalreachinsight/php-fpm-nginx-docker
-          tag: "latest,nightly-${CIRCLE_BUILD_NUM}"
+          tag: "latest,nightly-${CUSTOM_BUILD_NUM}"
           
       - docker/push:
           registry: ghcr.io
           image: digitalreachinsight/php-fpm-nginx-docker
-          tag: "latest,nightly-${CIRCLE_BUILD_NUM}"
+          tag: "latest,nightly-${CUSTOM_BUILD_NUM}"
 
 workflows:
   nightly-build:
