@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     php-zip \
     supervisor \
     gettext-base \
+    mariadb-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Redirect global Nginx configurations to read our non-root runtime file
