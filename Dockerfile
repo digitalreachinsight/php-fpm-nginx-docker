@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /run/php && \
-    sed -i 's/;listen.mode = 0660/listen.mode = 0660/g' /etc/php/8.3/fpm/pool.d/www.conf
+    sed -i 's/;listen.mode = 0660/listen.mode = 0660/g' /etc/php/8.5/fpm/pool.d/www.conf
 
 # Copy configurations and the template
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
