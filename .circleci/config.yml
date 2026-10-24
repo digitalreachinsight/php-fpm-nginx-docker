@@ -1,66 +1,56 @@
 version: 2.1
 
-# Import the official CircleCI Docker orb to simplify builds and pushes -ee
 orbs:
-  docker: circleci/docker@2.8.2
+  docker: circleci/docker@4.0.1
 
 jobs:
-  build-and-push:
+  build:
     docker:
-      - image: cimg/base:stable
+      - image: cimg/base:current
     steps:
       - checkout
-      - run:
-          name: Generate Custom Build Date Number
-          command: |
-            # Generate format: YYYY.MM.DD.SECONDS.MILLISECONDS
-            # Using %s for total seconds since epoch, or change to %S for seconds of the minute
-            CUSTOM_BUILD_NUM=$(date +%Y.%m.%d.%s.%3N)
-            
-            echo "Generated Build Number: $CUSTOM_BUILD_NUM"
-            
-            # Persist the variable for subsequent steps in this job
-            echo "export BUILD_NUM=$CUSTOM_BUILD_NUM" >> $BASH_ENV
-      - run:
-          name: Use Custom Build Number
-          command: |
-            echo "The current build identifier is: $BUILD_NUM"
-      
+
+      # 1. Spin up the remote Docker environment
       - setup_remote_docker:
+          version: default
           docker_layer_caching: true
 
-      # Fixed: Corrected parameter names to 'docker-username' and 'docker-password'
+      # 2. Generate custom timestamp: YYYY.MM.DD.SECONDS.MILLISECONDS
+      - run:
+          name: Generate Custom Build Timestamp Tag
+          command: |
+            CUSTOM_BUILD_NUM=$(date +%Y.%m.%d.%s.%3N)
+            echo "Generated Build Tag: $CUSTOM_BUILD_NUM"
+            echo "export BUILD_NUM=$CUSTOM_BUILD_NUM" >> $BASH_ENV
+
+      # 3. Authenticate and check connection to GitHub Container Registry
       - docker/check:
           registry: ghcr.io
           docker-username: GHCR_USERNAME
           docker-password: GHCR_PASSWORD
 
-      - docker/build:
-          registry: ghcr.io
-          image: digitalreachinsight/php-fpm-nginx-docker
-          tag: "latest,nightly-${CUSTOM_BUILD_NUM}"
-          
-      - docker/push:
-          registry: ghcr.io
-          image: digitalreachinsight/php-fpm-nginx-docker
-          tag: "latest,nightly-${CUSTOM_BUILD_NUM}"
+      # 4. Build and Push the Docker image to GHCR using the custom timestamp
+      - run:
+          name: Build and Push Docker Image to GHCR
+          command: |
+            # GitHub Container Registry requires lowercase owner and repo names
+            GH_OWNER=$(echo "$CIRCLE_PROJECT_USERNAME" | tr '[:upper:]' '[:lower:]')
+            REPO_NAME=$(echo "$CIRCLE_PROJECT_REPONAME" | tr '[:upper:]' '[:lower:]')
+            
+            IMAGE_BASE="ghcr.io/$GH_OWNER/$REPO_NAME"
+            
+            echo "Building image: $IMAGE_BASE:$BUILD_NUM"
+            docker build -t "$IMAGE_BASE:$BUILD_NUM" -t "$IMAGE_BASE:latest" .
+            
+            echo "Pushing image to GHCR..."
+            docker push "$IMAGE_BASE:$BUILD_NUM"
+            docker push "$IMAGE_BASE:latest"
 
 workflows:
-  nightly-build:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
+  version: 2.1
+  ghcr-build-workflow:
+    jobs:
+      - build:
           filters:
             branches:
-              only:
-                - main
-    jobs:
-      - build-and-push
-
-  manual-push-build:
-    jobs:
-      - build-and-push:
-          filters:
-            branches:
-              only:
-                - main
+              only: main
