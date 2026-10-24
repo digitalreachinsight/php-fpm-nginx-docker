@@ -21,6 +21,10 @@ RUN rm /etc/nginx/sites-enabled/default && \
 
 # Adjust global PHP-FPM configuration to use /tmp for its socket
 RUN sed -i 's|listen = /run/php/php8.5-fpm.sock|listen = /tmp/php8.5-fpm.sock|g' /etc/php/8.5/fpm/pool.d/www.conf
+# FIX: Move PHP-FPM's main master PID and log file to writeable /tmp
+RUN sed -i 's|;error_log = .*|error_log = /tmp/php8.5-fpm.log|g' /etc/php/8.5/fpm/php-fpm.conf && \
+    sed -i 's|;pid = .*|pid = /tmp/php8.5-fpm.pid|g' /etc/php/8.5/fpm/php-fpm.conf
+
 
 # Give the non-root 'www-data' user ownership over required system runtime folders
 RUN chown -R www-data:www-data /var/lib/nginx /var/log/nginx /etc/nginx
