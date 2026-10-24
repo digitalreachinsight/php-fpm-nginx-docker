@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  docker: circleci/docker@4.0.1
-
 jobs:
   build:
     docker:
@@ -23,17 +20,17 @@ jobs:
             echo "Generated Build Tag: $CUSTOM_BUILD_NUM"
             echo "export BUILD_NUM=$CUSTOM_BUILD_NUM" >> $BASH_ENV
 
-      # 3. Authenticate and check connection to GitHub Container Registry
-      - docker/check:
-          registry: ghcr.io
-          docker-username: GHCR_USERNAME
-          docker-password: GHCR_PASSWORD
+      # 3. Authenticate securely with GitHub Container Registry (ghcr.io)
+      - run:
+          name: Login to GHCR
+          command: |
+            echo "$GHCR_PASSWORD" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
       # 4. Build and Push the Docker image to GHCR using the custom timestamp
       - run:
           name: Build and Push Docker Image to GHCR
           command: |
-            # GitHub Container Registry requires lowercase owner and repo names
+            # Convert owner and repository names to lowercase (required by GHCR)
             GH_OWNER=$(echo "$CIRCLE_PROJECT_USERNAME" | tr '[:upper:]' '[:lower:]')
             REPO_NAME=$(echo "$CIRCLE_PROJECT_REPONAME" | tr '[:upper:]' '[:lower:]')
             
