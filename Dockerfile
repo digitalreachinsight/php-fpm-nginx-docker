@@ -56,6 +56,8 @@ pm.max_children = 5\n\
 pm.start_servers = 2\n\
 pm.min_spare_servers = 1\n\
 pm.max_spare_servers = 3" > /etc/php/8.5/fpm/pool.d/www.conf
+# Force the main system daemon to log directly to stdout/stderr instead of a root-owned file
+RUN sed -i 's|error_log = .*|error_log = /dev/stderr|g' /etc/php/8.5/fpm/php-fpm.conf
 
 RUN chmod +x /tmp/entrypoint.sh
 # EXPOSE the new unprivileged port
