@@ -10,6 +10,22 @@ jobs:
       - image: cimg/base:stable
     steps:
       - checkout
+      - run:
+          name: Generate Custom Build Date Number
+          command: |
+            # Generate format: YYYY.MM.DD.SECONDS.MILLISECONDS
+            # Using %s for total seconds since epoch, or change to %S for seconds of the minute
+            CUSTOM_BUILD_NUM=$(date +%Y.%m.%d.%s.%3N)
+            
+            echo "Generated Build Number: $CUSTOM_BUILD_NUM"
+            
+            # Persist the variable for subsequent steps in this job
+            echo "export BUILD_NUM=$CUSTOM_BUILD_NUM" >> $BASH_ENV
+      - run:
+          name: Use Custom Build Number
+          command: |
+            echo "The current build identifier is: $BUILD_NUM"
+      
       - setup_remote_docker:
           docker_layer_caching: true
 
