@@ -2,7 +2,6 @@ FROM ubuntu:26.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Added gettext-base for the envsubst utility
 RUN apt-get update && apt-get install -y \
     nginx \
     php-fpm \
@@ -16,18 +15,27 @@ RUN apt-get update && apt-get install -y \
     gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /run/php && \
-    sed -i 's/;listen.mode = 0660/listen.mode = 0660/g' /etc/php/8.5/fpm/pool.d/www.conf
+# Redirect global Nginx configurations to read our non-root runtime file
+RUN rm /etc/nginx/sites-enabled/default && \
+    echo "include /tmp/nginx-runtime.conf;" > /etc/nginx/conf.d/rootless.conf
 
-# Copy configurations and the template
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY nginx.conf.template /etc/nginx/nginx.conf.template
+# Adjust global PHP-FPM configuration to use /tmp for its socket
+RUN sed -i 's|listen = /run/php/php8.5-fpm.sock|listen = /tmp/php8.5-fpm.sock|g' /etc/php/8.5/fpm/pool.d/www.conf
 
-# Copy and set up the entrypoint script
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Give the non-root 'www-data' user ownership over required system runtime folders
+RUN chown -R www-data:www-data /var/lib/nginx /var/log/nginx /etc/nginx
 
-EXPOSE 80
+# Copy our configuration templates to /tmp where they can be accessed/modified by non-root
+COPY --chown=www-data:www-data supervisord.conf /tmp/supervisord.conf
+COPY --chown=www-data:www-data nginx.conf.template /tmp/nginx.conf.template
+COPY --chown=www-data:www-data entrypoint.sh /tmp/entrypoint.sh
 
-# The container now boots using the entrypoint script
-ENTRYPOINT ["/entrypoint.sh"]
+RUN chmod +x /tmp/entrypoint.sh
+
+# EXPOSE the new unprivileged port
+EXPOSE 8080
+
+# Switch permanently to the non-root user
+USER www-data
+
+ENTRYPOINT ["/tmp/entrypoint.sh"]
