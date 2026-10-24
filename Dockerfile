@@ -1,9 +1,8 @@
 FROM ubuntu:26.04
 
-# Prevent interactive prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Nginx, PHP-FPM, Supervisor, and WordPress PHP extensions
+# Added gettext-base for the envsubst utility
 RUN apt-get update && apt-get install -y \
     nginx \
     php-fpm \
@@ -14,22 +13,21 @@ RUN apt-get update && apt-get install -y \
     php-xml \
     php-zip \
     supervisor \
+    gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Configure PHP-FPM to use a Unix socket and run in the foreground
 RUN mkdir -p /run/php && \
-    sed -i 's/;listen.mode = 0660/listen.mode = 0660/g' /etc/php/8.3/fpm/pool.d/www.conf && \
-    clearabs=$(grep -n "listen =" /etc/php/8.3/fpm/pool.d/www.conf | cut -d: -f1)
+    sed -i 's/;listen.mode = 0660/listen.mode = 0660/g' /etc/php/8.3/fpm/pool.d/www.conf
 
-# Copy configuration files into the image
+# Copy configurations and the template
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY nginx.conf /etc/nginx/sites-available/default
+COPY nginx.conf.template /etc/nginx/nginx.conf.template
 
-# Set up the WordPress working directory
-WORKDIR /var/www/html
+# Copy and set up the entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Expose port 80 for cluster routing meshes / ingress controllers
 EXPOSE 80
 
-# Start Supervisor to manage both Nginx and PHP-FPM
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# The container now boots using the entrypoint script
+ENTRYPOINT ["/entrypoint.sh"]
