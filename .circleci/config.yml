@@ -1,66 +1,43 @@
 version: 2.1
 
-# Import the official CircleCI Docker orb to simplify builds and pushes -ee
-orbs:
-  docker: circleci/docker@2.8.2
-
 jobs:
-  build-and-push:
+  build_and_push:
     docker:
-      - image: cimg/base:stable
+      - image: cimg/base:current
     steps:
       - checkout
+      
+      # 1. Enable remote docker if your pipeline builds docker images
+      - setup_remote_docker:
+          version: default
+
+      # 2. Generate the custom date-based build number and export it
       - run:
-          name: Generate Custom Build Date Number
+          name: Set Custom Build Timestamp Tag
           command: |
-            # Generate format: YYYY.MM.DD.SECONDS.MILLISECONDS
-            # Using %s for total seconds since epoch, or change to %S for seconds of the minute
+            # Format: YYYY.MM.DD.SECONDS.MILLISECONDS
+            # %s gives total seconds since epoch for global uniqueness
             CUSTOM_BUILD_NUM=$(date +%Y.%m.%d.%s.%3N)
             
-            echo "Generated Build Number: $CUSTOM_BUILD_NUM"
+            echo "Generated custom tag: $CUSTOM_BUILD_NUM"
             
-            # Persist the variable for subsequent steps in this job
+            # Export to $BASH_ENV so it persists across steps in this job
             echo "export BUILD_NUM=$CUSTOM_BUILD_NUM" >> $BASH_ENV
+
+      # 3. Use the $BUILD_NUM variable in your Docker build/tag commands
       - run:
-          name: Use Custom Build Number
+          name: Build and Tag Docker Image
           command: |
-            echo "The current build identifier is: $BUILD_NUM"
-      
-      - setup_remote_docker:
-          docker_layer_caching: true
+            echo "Building image with tag: $BUILD_NUM"
+            
+            # Example using it to tag your image:
+            docker build -t digitalreachinsight/php-fpm-nginx-docker:$BUILD_NUM .
+            
+            # Or passing it as a build argument to your Dockerfile:
+            # docker build --build-arg BUILD_DATE=$BUILD_NUM -t digitalreachinsight/php-fpm-nginx-docker:latest .
 
-      # Fixed: Corrected parameter names to 'docker-username' and 'docker-password'
-      - docker/check:
-          registry: ghcr.io
-          docker-username: GHCR_USERNAME
-          docker-password: GHCR_PASSWORD
-
-      - docker/build:
-          registry: ghcr.io
-          image: digitalreachinsight/php-fpm-nginx-docker
-          tag: "latest,nightly-${CUSTOM_BUILD_NUM}"
-          
-      - docker/push:
-          registry: ghcr.io
-          image: digitalreachinsight/php-fpm-nginx-docker
-          tag: "latest,nightly-${CUSTOM_BUILD_NUM}"
-
-workflows:
-  nightly-build:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - build-and-push
-
-  manual-push-build:
-    jobs:
-      - build-and-push:
-          filters:
-            branches:
-              only:
-                - main
+      # 4. (Optional) Push the image to Docker Hub or ECR
+      - run:
+          name: Push Docker Image
+          command: |
+            # docker push digitalreachinsight/php-fpm-nginx-docker:$BUILD_NUM
