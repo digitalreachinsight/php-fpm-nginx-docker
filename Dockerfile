@@ -18,12 +18,16 @@ RUN apt-get update && apt-get install -y \
 # Redirect global Nginx configurations to read our non-root runtime file
 RUN rm /etc/nginx/sites-enabled/default && \
     echo "include /tmp/nginx-runtime.conf;" > /etc/nginx/conf.d/rootless.conf
+# Disable the log file inside the pool config so it logs to standard error stream instead
+RUN sed -i 's|;catch_workers_output = yes|catch_workers_output = yes|g' /etc/php/8.5/fpm/pool.d/www.conf
 
 # Adjust global PHP-FPM configuration to use /tmp for its socket
 RUN sed -i 's|listen = /run/php/php8.5-fpm.sock|listen = /tmp/php8.5-fpm.sock|g' /etc/php/8.5/fpm/pool.d/www.conf
 # FIX: Move PHP-FPM's main master PID and log file to writeable /tmp
 RUN sed -i 's|;error_log = .*|error_log = /tmp/php8.5-fpm.log|g' /etc/php/8.5/fpm/php-fpm.conf && \
     sed -i 's|;pid = .*|pid = /tmp/php8.5-fpm.pid|g' /etc/php/8.5/fpm/php-fpm.conf
+# Prevent PHP-FPM from trying to drop root privileges internally (since it's already non-root)
+RUN sed -i 's/;daemonize = yes/daemonize = no/g' /etc/php/8.5/fpm/php-fpm.conf
 
 
 # Give the non-root 'www-data' user ownership over required system runtime folders
