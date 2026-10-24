@@ -1,4 +1,7 @@
-# Move temporary runtime files to a writeable directory
+# 1. FIX: Move the main master PID file to a writeable directory
+pid /tmp/nginx.pid;
+
+# 2. FIX: Move all internal proxy/cache directories to a writeable directory
 client_body_temp_path /tmp/client_body;
 fastcgi_temp_path /tmp/fastcgi_temp;
 proxy_temp_path /tmp/proxy_temp;
@@ -6,7 +9,7 @@ scgi_temp_path /tmp/scgi_temp;
 uwsgi_temp_path /tmp/uwsgi_temp;
 
 server {
-    listen 8080; # Non-root users can bind to ports > 1024
+    listen 8080;
     server_name localhost;
     
     root ${WEB_ROOT};
@@ -19,7 +22,7 @@ server {
     location ~ \.php$ {
         include fastcgi_params;
         fastcgi_intercept_errors on;
-        fastcgi_pass unix:/tmp/php8.5-fpm.sock; # Socket moved to writeable /tmp
+        fastcgi_pass unix:/tmp/php8.5-fpm.sock;
         fastcgi_param SCRIPT_FILENAME ${WEB_ROOT}$fastcgi_script_name;
     }
 
@@ -28,4 +31,3 @@ server {
         log_not_found off;
     }
 }
-
