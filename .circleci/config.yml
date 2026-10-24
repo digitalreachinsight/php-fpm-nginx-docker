@@ -26,13 +26,13 @@ jobs:
           command: |
             echo "$GHCR_PASSWORD" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
-      # 4. Build and Push the Docker image to GHCR using the custom timestamp
+      # 4. Build and Push the Docker image to GHCR using explicit repository names
       - run:
           name: Build and Push Docker Image to GHCR
           command: |
-            # Convert owner and repository names to lowercase (required by GHCR)
-            GH_OWNER=$(echo "$CIRCLE_PROJECT_USERNAME" | tr '[:upper:]' '[:lower:]')
-            REPO_NAME=$(echo "$CIRCLE_PROJECT_REPONAME" | tr '[:upper:]' '[:lower:]')
+            # Explicitly define your owner and repo to prevent space/formatting errors
+            GH_OWNER="digitalreachinsight"
+            REPO_NAME="php-fpm-nginx-docker"
             
             IMAGE_BASE="ghcr.io/$GH_OWNER/$REPO_NAME"
             
