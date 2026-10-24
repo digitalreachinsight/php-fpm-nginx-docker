@@ -48,8 +48,16 @@ COPY --chown=www-data:www-data supervisord.conf /tmp/supervisord.conf
 COPY --chown=www-data:www-data nginx.conf.template /tmp/nginx.conf.template
 COPY --chown=www-data:www-data entrypoint.sh /tmp/entrypoint.sh
 
-RUN chmod +x /tmp/entrypoint.sh
 
+RUN echo "[www]\n\
+listen = /tmp/php8.5-fpm.sock\n\
+pm = dynamic\n\
+pm.max_children = 5\n\
+pm.start_servers = 2\n\
+pm.min_spare_servers = 1\n\
+pm.max_spare_servers = 3" > /etc/php/8.5/fpm/pool.d/www.conf
+
+RUN chmod +x /tmp/entrypoint.sh
 # EXPOSE the new unprivileged port
 EXPOSE 8080
 
