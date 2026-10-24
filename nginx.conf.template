@@ -1,7 +1,3 @@
-# 1. FIX: Move the main master PID file to a writeable directory
-pid /tmp/nginx.pid;
-
-# 2. FIX: Move all internal proxy/cache directories to a writeable directory
 client_body_temp_path /tmp/client_body;
 fastcgi_temp_path /tmp/fastcgi_temp;
 proxy_temp_path /tmp/proxy_temp;
