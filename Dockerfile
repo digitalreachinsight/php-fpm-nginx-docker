@@ -29,9 +29,19 @@ RUN sed -i 's|;error_log = .*|error_log = /tmp/php8.5-fpm.log|g' /etc/php/8.5/fp
 # Prevent PHP-FPM from trying to drop root privileges internally (since it's already non-root)
 RUN sed -i 's/;daemonize = yes/daemonize = no/g' /etc/php/8.5/fpm/php-fpm.conf
 
+# Forcefully comment out user and group switching directives
+RUN sed -i 's/^user =/;user =/g' /etc/php/8.5/fpm/pool.d/www.conf
+RUN sed -i 's/^group =/;group =/g' /etc/php/8.5/fpm/pool.d/www.conf
+
+# Forcefully comment out socket listen permissions (not needed since we are running rootless in /tmp)
+RUN sed -i 's/^listen.owner/;listen.owner/g' /etc/php/8.5/fpm/pool.d/www.conf
+RUN sed -i 's/^listen.group/;listen.group/g' /etc/php/8.5/fpm/pool.d/www.conf
+
 
 # Give the non-root 'www-data' user ownership over required system runtime folders
-RUN chown -R www-data:www-data /var/lib/nginx /var/log/nginx /etc/nginx
+RUN chown -R www-data:www-data /var/lib/nginx /var/log/nginx /etc/nginx /var/run
+RUN touch /var/log/nginx/access.log /var/log/nginx/error.log && \
+    chown www-data:www-data /var/log/nginx/access.log /var/log/nginx/error.log
 
 # Copy our configuration templates to /tmp where they can be accessed/modified by non-root
 COPY --chown=www-data:www-data supervisord.conf /tmp/supervisord.conf
