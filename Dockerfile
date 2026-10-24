@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     gettext-base \
     mariadb-client \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Redirect global Nginx configurations to read our non-root runtime file
