@@ -30,4 +30,3 @@ steps:
         from_secret: registry_password
 
 
-#end
