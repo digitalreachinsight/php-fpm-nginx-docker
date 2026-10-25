@@ -15,3 +15,5 @@ steps:
       
       # Optional: Uncomment the line below if you are using GitHub Packages (GHCR) instead of Docker Hub
       registry: ghcr.io
+
+      #
