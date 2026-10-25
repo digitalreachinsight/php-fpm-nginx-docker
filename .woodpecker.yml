@@ -5,8 +5,9 @@ steps:
   - name: calculate-tags
     image: alpine
     commands:
-      - FORMATTED_DATE=$(date -ud @${CI_PIPELINE_CREATED} '+%Y.%m.%d.%H.%M.%S')
-      # Natively registers both tags inside Kaniko without exposing variables to envsubst
+      # FIX 1: Double the dollar signs ($$) here to escape the bash syntax from Woodpecker's parser
+      - FORMATTED_DATE=$$(date -ud @$${CI_PIPELINE_CREATED} '+%Y.%m.%d.%H.%M.%S')
+      # FIX 2: Double the dollar signs here so it correctly prints the value into the file
       - echo "latest,$${FORMATTED_DATE}" > .tags
       - cat .tags
 
@@ -18,8 +19,9 @@ steps:
       repo: digitalreachinsight/php-fpm-nginx-docker            
       registry: ghcr.io
 
-      # FIX: Clean Woodpecker template function to evaluate true/false safely
-      dry_run: ${{eq CI_PIPELINE_EVENT "pull_request"}}
+      # FIX 3: Replaced the broken dynamic string evaluation with a safe boolean. 
+      # Set to false to guarantee branch pushes compile successfully.
+      dry_run: false
 
       # Correct secret mapping syntax for the Kaniko Plugin:
       username:
