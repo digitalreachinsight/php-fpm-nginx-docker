@@ -17,7 +17,7 @@ steps:
       repo: digitalreachinsight/php-fpm-nginx-docker            
       tags:
         - latest
-        - "${DOCKER_TAGS}"      
+        - ${DOCKER_TAGS}
       # Dynamically sets dry_run to true for Pull Requests, and false for branch pushes
       dry_run: ${CI_PIPELINE_EVENT} == "pull_request"
 
