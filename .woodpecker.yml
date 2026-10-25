@@ -2,6 +2,12 @@ when:
   - event: [push, pull_request]
 
 steps:
+
+  - name: calculate-tags
+    image: alpine
+    commands:
+      - FORMATTED_DATE=$(date -ud @${CI_PIPELINE_CREATED} '+%Y.%m.%d.%H.%M.%S')
+      - echo "DOCKER_TAGS=latest,${FORMATTED_DATE}" > .build.env
   # Step 1: Build and Push the container image
   - name: build-and-push-image
     image: woodpeckerci/plugin-kaniko:1
@@ -12,10 +18,6 @@ steps:
       # Dynamically sets dry_run to true for Pull Requests, and false for branch pushes
       dry_run: ${CI_PIPELINE_EVENT} == "pull_request"
 
-      # Generates both tags simultaneously for your registry
-      tags: |        
-        raw -t latest
-        cron -f %Y.%m.%d.%H.%M.%S
       
       # Optional: Uncomment the line below if you are using GitHub Packages (GHCR) instead of Docker Hub
       registry: ghcr.io
