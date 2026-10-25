@@ -2,32 +2,30 @@ when:
   - event: [push, pull_request]
 
 steps:
-
   - name: calculate-tags
     image: alpine
     commands:
       - FORMATTED_DATE=$(date -ud @${CI_PIPELINE_CREATED} '+%Y.%m.%d.%H.%M.%S')
-      - echo "DOCKER_TAGS=$${FORMATTED_DATE}" > .build.env
-      - cat .build.env
+      # We write directly to a standard env file format inside a shared workspace volume
+      - echo "DOCKER_TAGS=latest,$${FORMATTED_DATE}" > kaniko.env
+
   # Step 1: Build and Push the container image
   - name: build-and-push-image
     image: woodpeckerci/plugin-kaniko:1
-    environment_file: .build.env
+    # We pass the env file via Kaniko's built-in ENV_FILE mechanism instead
+    environment:
+      ENV_FILE: kaniko.env
     settings:
       dockerfile: Dockerfile
       repo: digitalreachinsight/php-fpm-nginx-docker            
-      tags:
-        - latest
-        - ${DOCKER_TAGS}
-      # Dynamically sets dry_run to true for Pull Requests, and false for branch pushes
-      dry_run: ${CI_PIPELINE_EVENT} == "pull_request"
-
       
+      # Correct Woodpecker syntax for dynamic evaluation
+      dry_run: ${{eq CI_PIPELINE_EVENT "pull_request"}}
+
       # Optional: Uncomment the line below if you are using GitHub Packages (GHCR) instead of Docker Hub
       registry: ghcr.io
 
-      #
-     # Correct secret mapping syntax for the Kaniko Plugin:
+      # Correct secret mapping syntax for the Kaniko Plugin:
       username:
         from_secret: registry_username
       password:
