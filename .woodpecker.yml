@@ -12,6 +12,7 @@ steps:
   # Step 1: Build and Push the container image
   - name: build-and-push-image
     image: woodpeckerci/plugin-kaniko:1
+    environment_file: .build.env
     settings:
       dockerfile: Dockerfile
       repo: digitalreachinsight/php-fpm-nginx-docker            
