@@ -1,5 +1,3 @@
-version: '1'
-
 # Global configuration ensuring tasks run conditionally
 when:
   event: [push, pull_request]
