@@ -6,7 +6,7 @@ steps:
     image: alpine
     commands:
       - FORMATTED_DATE=$(date -ud @${CI_PIPELINE_CREATED} '+%Y.%m.%d.%H.%M.%S')
-      # Kaniko looks for a file named exactly ".tags" in the root directory
+      # Natively registers both tags inside Kaniko without exposing variables to envsubst
       - echo "latest,$${FORMATTED_DATE}" > .tags
       - cat .tags
 
@@ -16,13 +16,12 @@ steps:
     settings:
       dockerfile: Dockerfile
       repo: digitalreachinsight/php-fpm-nginx-docker            
-      
-      # FIX: Remove the 'tags:' configuration line entirely.
-      # Leaving it blank tells Kaniko to read from your .tags file natively.
-      
-      dry_run: ${{eq CI_PIPELINE_EVENT "pull_request"}}
       registry: ghcr.io
 
+      # FIX: Clean Woodpecker template function to evaluate true/false safely
+      dry_run: ${{eq CI_PIPELINE_EVENT "pull_request"}}
+
+      # Correct secret mapping syntax for the Kaniko Plugin:
       username:
         from_secret: registry_username
       password:
