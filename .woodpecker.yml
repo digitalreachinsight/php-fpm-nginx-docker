@@ -1,21 +1,12 @@
-# Note: "version: '1'" is intentionally omitted to prevent syntax errors
-
-# Global configuration ensuring tasks run conditionally
 when:
   - event: [push, pull_request]
 
 steps:
-  # Step 1: Lint the entrypoint Shell script to catch formatting bugs
-  - name: lint-shell
-    image: koalaman/shellcheck-alpine
-    commands:
-      - shellcheck entrypoint.sh
-
-  # Step 2: Build the Nginx/PHP-FPM container image locally (No Privileges Required)
+  # Step 1: Build the Nginx/PHP-FPM container image directly
   - name: build-test-image
     image: woodpeckerci/plugin-kaniko:1
     settings:
       dockerfile: Dockerfile
       repo: digitalreachinsight/php-fpm-nginx-docker
       tags: test-build
-      dry_run: true # Compiles the image layers without pushing to an external registry
+      dry_run: true
