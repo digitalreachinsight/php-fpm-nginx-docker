@@ -11,6 +11,11 @@ steps:
       tags: latest
       # Dynamically sets dry_run to true for Pull Requests, and false for branch pushes
       dry_run: ${CI_PIPELINE_EVENT} == "pull_request"
+
+      # Generates both tags simultaneously for your registry
+      tags: |        
+        raw -t latest
+        cron -f %Y.%m.%d.%H.%M.%S
       
       # Optional: Uncomment the line below if you are using GitHub Packages (GHCR) instead of Docker Hub
       registry: ghcr.io
