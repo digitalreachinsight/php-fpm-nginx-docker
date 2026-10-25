@@ -5,7 +5,6 @@ steps:
   # Step 1: Build and Push the container image
   - name: build-and-push-image
     image: woodpeckerci/plugin-kaniko:1
-    secrets: [ registry_username, registry_password ] # Injects your secure credentials
     settings:
       dockerfile: Dockerfile
       repo: digitalreachinsight/php-fpm-nginx-docker
@@ -17,3 +16,8 @@ steps:
       registry: ghcr.io
 
       #
+     # Correct secret mapping syntax for the Kaniko Plugin:
+      username:
+        from_secret: registry_username
+      password:
+        from_secret: registry_password
