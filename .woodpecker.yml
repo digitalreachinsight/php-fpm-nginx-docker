@@ -13,8 +13,8 @@ steps:
     image: woodpeckerci/plugin-kaniko:1
     settings:
       dockerfile: Dockerfile
-      repo: digitalreachinsight/php-fpm-nginx-docker
-      tags: latest
+      repo: digitalreachinsight/php-fpm-nginx-docker      
+      tags: latest,${DOCKER_TAGS}
       # Dynamically sets dry_run to true for Pull Requests, and false for branch pushes
       dry_run: ${CI_PIPELINE_EVENT} == "pull_request"
 
