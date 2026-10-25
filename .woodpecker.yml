@@ -1,0 +1,22 @@
+version: '1'
+
+# Global configuration ensuring tasks run conditionally
+when:
+  event: [push, pull_request]
+
+steps:
+  # Step 1: Lint the entrypoint Shell script to ensure no syntax errors
+  - name: lint-shell
+    image: koalaman/shellcheck-alpine
+    commands:
+      - shellcheck entrypoint.sh
+
+  # Step 2: Build the Nginx/PHP-FPM container image locally to verify the Dockerfile
+  # Uses the Docker-in-Docker (DinD) plugin to build cleanly without breaking host processes
+  - name: build-test-image
+    image: woodpeckerci/plugin-docker-buildx
+    settings:
+      dockerfile: Dockerfile
+      repo: digitalreachinsight/php-fpm-nginx-docker
+      tags: test-build
+      dry_run: true # Ensures the image compiles perfectly without attempting to push to Docker Hub yet
