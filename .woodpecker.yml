@@ -6,26 +6,23 @@ steps:
     image: alpine
     commands:
       - FORMATTED_DATE=$(date -ud @${CI_PIPELINE_CREATED} '+%Y.%m.%d.%H.%M.%S')
-      # We write directly to a standard env file format inside a shared workspace volume
-      - echo "DOCKER_TAGS=latest,$${FORMATTED_DATE}" > kaniko.env
+      # Kaniko looks for a file named exactly ".tags" in the root directory
+      - echo "latest,$${FORMATTED_DATE}" > .tags
+      - cat .tags
 
   # Step 1: Build and Push the container image
   - name: build-and-push-image
     image: woodpeckerci/plugin-kaniko:1
-    # We pass the env file via Kaniko's built-in ENV_FILE mechanism instead
-    environment:
-      ENV_FILE: kaniko.env
     settings:
       dockerfile: Dockerfile
       repo: digitalreachinsight/php-fpm-nginx-docker            
       
-      # Correct Woodpecker syntax for dynamic evaluation
+      # FIX: Remove the 'tags:' configuration line entirely.
+      # Leaving it blank tells Kaniko to read from your .tags file natively.
+      
       dry_run: ${{eq CI_PIPELINE_EVENT "pull_request"}}
-
-      # Optional: Uncomment the line below if you are using GitHub Packages (GHCR) instead of Docker Hub
       registry: ghcr.io
 
-      # Correct secret mapping syntax for the Kaniko Plugin:
       username:
         from_secret: registry_username
       password:
