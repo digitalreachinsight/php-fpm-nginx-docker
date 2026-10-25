@@ -7,7 +7,7 @@ steps:
     image: alpine
     commands:
       - FORMATTED_DATE=$(date -ud @${CI_PIPELINE_CREATED} '+%Y.%m.%d.%H.%M.%S')
-      - echo "DOCKER_TAGS=latest,$${FORMATTED_DATE}" > .build.env
+      - echo "DOCKER_TAGS=$${FORMATTED_DATE}" > .build.env
       - cat .build.env
   # Step 1: Build and Push the container image
   - name: build-and-push-image
@@ -17,7 +17,7 @@ steps:
       repo: digitalreachinsight/php-fpm-nginx-docker            
       tags:
         - latest
-        - "${{datetime CI_PIPELINE_CREATED '%Y.%m.%d.%H.%M.%S' 'UTC'}}"      
+        - "${DOCKER_TAGS}"      
       # Dynamically sets dry_run to true for Pull Requests, and false for branch pushes
       dry_run: ${CI_PIPELINE_EVENT} == "pull_request"
 
