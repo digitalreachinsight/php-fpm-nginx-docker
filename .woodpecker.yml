@@ -14,9 +14,10 @@ steps:
   # Step 2: Build the Nginx/PHP-FPM container image locally to verify the Dockerfile
   # Uses the Docker-in-Docker (DinD) plugin to build cleanly without breaking host processes
   - name: build-test-image
-    image: woodpeckerci/plugin-docker-buildx
+    image: woodpeckerci/plugin-docker-buildx:6
+    privileged: true # <-- Explicitly requests elevated container capability
     settings:
       dockerfile: Dockerfile
       repo: digitalreachinsight/php-fpm-nginx-docker
       tags: test-build
-      dry_run: true # Ensures the image compiles perfectly without attempting to push to Docker Hub yet
+      dry_run: true
